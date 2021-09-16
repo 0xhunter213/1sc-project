@@ -69,6 +69,8 @@ const ChoisirRendezVous = (props) => {
                 currentDate={props.currentDate}
                 currentTime={currentTime}
                 nextTime={nextTime}
+                lesAnneesDeLecole={props.lesAnneesDeLecole}
+                OnInsertRendezVousCollectif={props.OnInsertRendezVousCollectif}
               />
               <RendezVousIndividuelle
                 currentDate={props.currentDate}

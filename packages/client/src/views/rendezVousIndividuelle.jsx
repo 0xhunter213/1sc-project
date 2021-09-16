@@ -6,6 +6,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
 import Autocomplete from '@material-ui/lab/Autocomplete'
 import CircularProgress from '@material-ui/core/CircularProgress'
+import LoadingProgress from '../components/shared/loadingProgress'
 
 const RendezVousIndividuelle = (props) => {
   const dispatch = useDispatch()
@@ -72,13 +73,7 @@ const RendezVousIndividuelle = (props) => {
         </div>
         <ModalBody>
           {props.toggleProgress ? (
-            <div
-              className={
-                'progress__container d-flex justify-content-center align-items-center'
-              }
-            >
-              <CircularProgress />
-            </div>
+            <LoadingProgress text={'Insertion de rendez vous ...'} />
           ) : (
             <div>
               <div className="d-flex flex-column justify-content-center">

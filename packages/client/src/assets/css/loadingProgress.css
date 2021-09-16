@@ -1,0 +1,7 @@
+.progress__container {
+  position: absolute;
+  width: 97.5%;
+  height: 92%;
+  z-index: 30;
+  background-color: white;
+}

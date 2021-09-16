@@ -13,14 +13,111 @@ import TextField from '@material-ui/core/TextField'
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap'
 import Chip from '@material-ui/core/Chip'
 import Autocomplete from '@material-ui/lab/Autocomplete'
+import { useLazyQuery } from '@apollo/client'
+import LoadingProgress from '../components/shared/loadingProgress'
+import {
+  GET_EMAILS_PAR_ANNEE_GROUPE,
+  GET_LES_NIVEAU_DE_LECOLE
+} from '../graphql/queries/GET_RENDEZVOUS_INFOS'
 
 const RendezVousCollectif = (props) => {
-  const { buttonLabel, className } = props
+  const [loadEmailParGroupe, response] = useLazyQuery(
+    GET_EMAILS_PAR_ANNEE_GROUPE,
+    {
+      onCompleted: (data) => {
+        const {
+          allUserAccounts: { nodes }
+        } = data
+        const prevGroupeEmails = [...groupeEmails]
+        const index = prevGroupeEmails.findIndex(
+          (groupe) => groupe.niveau === choosedYear.niveau
+        )
+        if (index === -1) {
+          // console.log('the index ', index)
+          prevGroupeEmails.push({
+            niveau: choosedYear.niveau,
+            groupes: [
+              {
+                num: choosedGroup,
+                students: nodes
+              }
+            ]
+          })
+        } else {
+          prevGroupeEmails[index].groupes.push({
+            num: choosedGroup,
+            students: nodes
+          })
+        }
+        setShowedEmails(nodes)
+        setGroupeEmails(prevGroupeEmails)
+        setEmailsIsLoaded(false)
+        console.log('this is the new ', prevGroupeEmails)
+      },
+      onError: (error) => {
+        console.log('this is the error ', error)
+      }
+    }
+  )
+  const [showedEmails, setShowedEmails] = useState([])
+  const [emailsIsLoaded, setEmailsIsLoaded] = useState(false)
+  const [choosedGroup, setChoosedGroup] = useState()
+  const [startDate, setStartDate] = useState(props.currentDate)
+  const [startTime, setStartTime] = useState(props.currentTime)
+
+  const [endDate, setEndDate] = useState(props.currentDate)
+  const [endTime, setEndTime] = useState(props.nextTime)
+  const [choosedStudents, setChoosedStudents] = useState([])
+
   const dispatch = useDispatch()
+  const [choosedYear, setChoosedYear] = useState({
+    groupes: []
+  })
+  const [groupeEmails, setGroupeEmails] = useState([])
 
   const toggleCollecRdvModal = useSelector(
     (collecRdv) => collecRdv.toggleCollecRdvModal
   )
+
+  const handleGroupChange = ({ target: { value } }) => {
+    if (value) {
+      const INT_VALUE = parseInt(value)
+      const test = []
+      setChoosedGroup(INT_VALUE)
+      const theGroupeEmails = [...groupeEmails]
+
+      //console.log('the groupe variable 1', typeof test)
+
+      const newType = theGroupeEmails.filter((annee) => {
+        let group = null
+        // groupe.niveau === choosedYear.niveau && groupe.group.num === INT_VALUE
+        if (annee.niveau === choosedYear.niveau) {
+          group = annee.groupes.find((groupe) => groupe.num === INT_VALUE)
+          console.log('this is the group  ', group)
+        }
+
+        return group
+      })
+
+      setEmailsIsLoaded(true)
+
+      loadEmailParGroupe({
+        variables: {
+          niveau: choosedYear.niveau,
+          groupe: INT_VALUE
+        }
+      })
+    }
+  }
+  const handleAnneeChange = (e, value) => {
+    value ? setChoosedYear(value) : setChoosedYear({ groupes: [] })
+    //
+    // console.log('this is the choosed year ', value)
+  }
+  const handleChoosedStudents = (e, value) => {
+    setChoosedStudents(value)
+    // console.log('this is the choosed students ', value)
+  }
   const useStyles = makeStyles((theme) => ({
     container: {
       display: 'flex',
@@ -39,15 +136,9 @@ const RendezVousCollectif = (props) => {
     }
   }))
   const classes = useStyles()
-  const top100Films = [
-    { title: 'The Shawshank Redemption', year: 1994 },
-    { title: 'The Godfather', year: 1972 },
-    { title: 'The Godfather: Part II', year: 1974 },
-    { title: 'The Dark Knight', year: 2008 },
-    { title: '12 Angry Men', year: 1957 }
-  ]
+
   const defaultProps = {
-    options: top100Films,
+    options: props.lesAnneesDeLecole,
     getOptionLabel: (option) => option.title
   }
   return (
@@ -60,6 +151,9 @@ const RendezVousCollectif = (props) => {
       >
         <ModalBody>
           <div className="d-flex flex-column justify-content-center">
+            {emailsIsLoaded ? (
+              <LoadingProgress text={'Chargement des emails'} />
+            ) : null}
             <div className="title__container p-5">
               <h2>Crèer un Rendez Vous Collectif</h2>
             </div>
@@ -75,16 +169,23 @@ const RendezVousCollectif = (props) => {
                     margin="normal"
                   />
                 )}
+                onChange={handleAnneeChange}
               />
 
               <select
-                className="select__groupe ml-auto"
+                className="select__groupe ml-3"
                 name="Groupe"
                 id="groupe"
+                onChange={handleGroupChange}
               >
-                <option value="groupe1">groupe1</option>
-                <option value="groupe2">groupe2</option>
-                <option value="groupe3"> groupe3 </option>
+                <option value={null} key={0} defaultValue>
+                  Choisir groupe
+                </option>
+                {choosedYear.groupes.map((groupe) => (
+                  <option value={groupe} key={`${choosedYear.niveau}${groupe}`}>
+                    Groupe {groupe}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="timing__container d-flex mt-4 px">
@@ -103,6 +204,7 @@ const RendezVousCollectif = (props) => {
                     InputLabelProps={{
                       shrink: true
                     }}
+                    onChange={(e) => setStartDate(e.target.value)}
                   />
                 </form>
               </div>
@@ -124,6 +226,7 @@ const RendezVousCollectif = (props) => {
                     inputProps={{
                       step: 300 // 5 min
                     }}
+                    onChange={(e) => setStartTime(e.target.value)}
                   />
                 </form>
               </div>
@@ -142,6 +245,7 @@ const RendezVousCollectif = (props) => {
                     InputLabelProps={{
                       shrink: true
                     }}
+                    onChange={(e) => setEndDate(e.target.value)}
                   />
                 </form>
               </div>
@@ -163,6 +267,7 @@ const RendezVousCollectif = (props) => {
                     inputProps={{
                       step: 300 // 5 min
                     }}
+                    onChange={(e) => setEndTime(e.target.value)}
                   />
                 </form>
               </div>
@@ -171,12 +276,13 @@ const RendezVousCollectif = (props) => {
               <span id="userIconCollec" className="mt-3 mr-3">
                 <FontAwesomeIcon icon={faUserPlus} />
               </span>
+              {/* {console.log('this is les anee ', props.lesAnneesDeLecole)} */}
               <div className="student__email">
                 <Autocomplete
                   multiple
                   id="studentEmailCollec"
-                  options={[]}
-                  getOptionLabel={(option) => option.title}
+                  options={showedEmails}
+                  getOptionLabel={(option) => `${option.nom} ${option.prenom}`}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -185,11 +291,27 @@ const RendezVousCollectif = (props) => {
                       placeholder="Favorites"
                     />
                   )}
+                  onChange={handleChoosedStudents}
                 />
               </div>
             </div>
             <div className="create_btn_container d-flex justify-content-center align-items-center mt-4">
-              <button className="">Crèer</button>
+              <button
+                className=""
+                onClick={() => {
+                  const appointement = {
+                    startDate,
+                    startTime,
+                    endDate,
+                    endTime,
+                    choosedStudents
+                  }
+                  console.log('all infos ', appointement)
+                  props.OnInsertRendezVousCollectif(appointement)
+                }}
+              >
+                Crèer
+              </button>
             </div>
           </div>
         </ModalBody>
