@@ -242,6 +242,7 @@ const Calend = () => {
     setAppointementTitle(
       `Rendez Vous de ${appointement.student.nom} ${appointement.student.prenom}`
     )
+    console.log(startDate, endDate)
     createRendezVousIndvMutation({
       variables: {
         data: {

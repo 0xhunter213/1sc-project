@@ -7,9 +7,13 @@ import { useHistory } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
 import { CREATE_EXAMEN_MEDICAL } from '../../graphql/mutations/CREATE_EXAMEN_MEDICAL';
 import Loading from './loading';
+import { useSelector,useDispatch } from 'react-redux';
+import { archiveAction } from '../../redux/actions';
+import { capitalizeFirstLetter } from '../../utils';
 
-const DossierCard = ({ id, dossierMedicalId, nom, prenom, profilePictureUrl }) => {
-
+const DossierCard = ({ id, dossierMedicalId, nom, prenom, profilePictureUrl, role }) => {
+    const dispatch = useDispatch(); 
+    const toggleArchive = useSelector(archive => archive.toggleArchive) 
     const history = useHistory()
 
     const [loading, setLoading] = useState(false)
@@ -18,7 +22,7 @@ const DossierCard = ({ id, dossierMedicalId, nom, prenom, profilePictureUrl }) =
         onCompleted: (data) => {
             history.push({
                 pathname: "/examiner",
-                search: `?id=${id}&examen_medical=${data.createExamenMedical.examenMedical.id}`
+                search: `?id=${id}+${data.createExamenMedical.examenMedical.id}`
             })
         }
     })
@@ -45,13 +49,13 @@ const DossierCard = ({ id, dossierMedicalId, nom, prenom, profilePictureUrl }) =
                     <Avatar alt="profile picture" src={profilePictureUrl} style={{marginRight: "16px"}} />
                     <div>
                         <h5>{prenom} {nom}</h5>
-                        <h6 className="dossier__title">Etudiant</h6>
+                        <h6 className="dossier__title">{capitalizeFirstLetter(role)}</h6>
                     </div>
                 </div>
                 <div className="dossier__actions d-flex align-items-center">
                     <button className="dossier__btns dossier__exam" onClick={examinerRouteChange}>Examiner<FontAwesomeIcon className="dossierCard__icons" icon={faStethoscope}/></button>
                     <button className="dossier__btns dossier__edit" onClick={modifieRouteChange}>Modifier<FontAwesomeIcon className="dossierCard__icons" icon={faEdit}/></button>
-                    <button className="dossier__btns dossier__archive">Archiver<FontAwesomeIcon className="dossierCard__icons" icon={faArchive}/></button>
+                    <button className="dossier__btns dossier__archive" onClick={() => dispatch(archiveAction({nom,prenom}))}>Archiver<FontAwesomeIcon className="dossierCard__icons" icon={faArchive}/></button>
                 </div>
             </div>
     );

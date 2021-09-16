@@ -241,7 +241,7 @@ const PatientInfos = (props)=>{
                 <div className="general_infos d-flex justify-content-between align-items-center">
                     <div className="main__infos d-flex justify-content-between align-items-center">
                         <div className="personal__img">
-                            <img alt="probably avatar of person" src="https://images.unsplash.com/photo-1560329072-17f59dcd30a4?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=767&q=80"/>
+                            <img alt="probably avatar of person" src={user.profilePicture}/>
                         </div>
                         <div className="informations">
                             <span className="titre">{capitalizeFirstLetter(user.role)}</span>
@@ -251,13 +251,14 @@ const PatientInfos = (props)=>{
                     </div>
                     
                     <div className="numbers d-flex justify-content-between align-items-flex-end">
-                        <h1 className="visits_num">00</h1>
+                        <span className="visits_num">00</span>
                         <span>Nombre totale de visites</span>
-                    </div>
-                </div>
-                <div className="pat_examin_btn">
+                        <div className="pat_examin_btn">
                     <button className="dossier__btns dossier__exam" onClick={examinRouteChange}>Examiner<FontAwesomeIcon className="dossierCard__icons" icon={faStethoscope}/></button>
                     </div>
+                    </div>
+                </div>
+              
                 {(!patInofs&&!bioInfos&&!antInfos&&!antMedInfos&&!exmInfos)?
                     <>
                     <div className="personal_infos">
@@ -312,7 +313,6 @@ const PatientInfos = (props)=>{
                         <BioDetail isCompleted={biometriqueById.isCompleted} items={[ObjList("taille",170,"Cm"),ObjList("Poids",66,"kg"),ObjList('IMC',"this is my test")]} text="Biométriques" src={Biometric} onClick={() => setBioInfos(!bioInfos)}/> 
                         <BioDetail isCompleted={antecedentsPersonnelleById.isCompleted} items={[ObjList("A Fumer ?","OUI"),ObjList("Jour",15),ObjList("A Chiquer?","OUI"),ObjList("A Prise?","OUI"),ObjList("Alcohol","OUI"),ObjList("Médicament","OUI"),ObjList("Autres","Text ...")]} text="Antécédents Personnells" src={Layer2} onClick={() => setAntInfos(!antInfos)}/>
                         <BioDetail isCompleted={antecedentsMedicoChirugicauxById.isCompleted} items={[ObjList("Affection Congénitales","some text")]} text="Antécédents Médico-Chirugicaux" src={Layer} onClick={() => setMedInfos(!antMedInfos)}/>
-                        <BioDetail items={[]} text="Examens Médicaux" src={group}/>
                     </div>
 
                     </>:patInofs?
@@ -427,7 +427,7 @@ const PatientInfos = (props)=>{
                     }}/>
                 </div>
                 </>
-                :antInfos?
+                :antInfos? 
                 <>
                  <div className="personal_infos_II">
                      <InfoHeader text="Antécédents Personnells" icon={Layer2}/>
@@ -454,7 +454,7 @@ const PatientInfos = (props)=>{
                          const jouresDeCigarattes = parseInt(jouresDeCigarattesRef.current.value.trim())
                          const chiquer = stringToBoolean(chiquerRef.current.value)
                          const prise = stringToBoolean(priseRef.current.value)
-                         const alcool = stringToBoolean(alcoolRef.current.v.btn_infosalue)
+                         const alcool = stringToBoolean(alcoolRef.current.value)
                          const medicaments = stringToBoolean(medicamentsRef.current.value)
                          const autres = autresRef.current.value.trim()
                          updateAntecedentsPersonnelles({
@@ -488,9 +488,21 @@ const PatientInfos = (props)=>{
                                             const {value} = event.target  
                                             setInput(value) 
                                         }
-                                    }/>
+                                    }
+                                    onKeyUp={(event) => {
+                                        if (event.key == "Enter"){
+                                            if (input === "" || input === " ") return;
+                                            else{ 
+                                                if(![...text].includes(input)){
+                                                setText([...text,input]);
+                                                }
+                                                setInput("");
+                                            }
+                                        }
+                                    }}
+                                    />
                                 </div>
-                                <button className="btn_infos_notes d-flex  align-items-center" onClick={() => {
+                                <button className="btn_infos_notes d-flex  align-items-center" onClick={()=> {
                                     if (input === "" || input === " ") return;
                                     else{ 
                                         if(![...text].includes(input)){
