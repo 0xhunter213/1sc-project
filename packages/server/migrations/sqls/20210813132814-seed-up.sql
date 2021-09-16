@@ -172,6 +172,7 @@ CREATE TRIGGER set_medecin_accorder_rende_vous BEFORE INSERT ON app.rendez_vous 
 CREATE TABLE app.ecole_niveau (
     niveau  INT CHECK (niveau >= 1 and niveau <= 5) NOT NULL,
     total_groupes INT CHECK (total_groupes >= 1 and total_groupes <= 10) NOT NULL,
+    description text NOT NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT now(),
     PRIMARY KEY (niveau)
 );
@@ -422,9 +423,11 @@ CREATE FUNCTION app.create_patient(
         dateDeNaissance DATE DEFAULT NULL,
         sexe SEXE DEFAULT NULL,
         niveau INT DEFAULT NULL,
+        groupe INT DEFAULT NULL,
         specialite SPECIALITE DEFAULT NULL,
         family_status FAMILY_STATUS DEFAULT NULL,
         role ROLE DEFAULT 'ETUDIANT'
+
     ) 
     RETURNS TABLE (id uuid) AS $$
         WITH
@@ -433,7 +436,7 @@ CREATE FUNCTION app.create_patient(
         ins_bio AS(INSERT INTO app.biometrique (id) VALUES ((SELECT id FROM ins_ds_mdc))),
         ins_atc_prs AS (INSERT INTO app.antecedents_personnelles (id) VALUES ((SELECT id FROM ins_ds_mdc))),
         ins_mdc_chgc AS (INSERT INTO app.antecedents_medico_chirugicaux (id) VALUES ((SELECT id FROM ins_ds_mdc)))
-        INSERT INTO app.user_account(user_id, email, role, nom, prenom, dateDeNaissance, sexe, niveau, specialite, adresse, telephone, profile_picture, family_status) 
+        INSERT INTO app.user_account(user_id, email, role, nom, prenom, dateDeNaissance, sexe, niveau,groupe, specialite, adresse, telephone, profile_picture, family_status) 
         VALUES (
             (SELECT id FROM ins_pvt_acc), 
             create_patient.email, 
@@ -443,6 +446,7 @@ CREATE FUNCTION app.create_patient(
             create_patient.dateDeNaissance, 
             create_patient.sexe, 
             create_patient.niveau, 
+            create_patient.groupe,
             create_patient.specialite, 
             create_patient.adresse, 
             create_patient.telephone,
@@ -452,7 +456,7 @@ CREATE FUNCTION app.create_patient(
             RETURNING user_id AS id;
 $$ LANGUAGE sql VOLATILE;
 
-GRANT EXECUTE ON FUNCTION app.create_patient(uuid, varchar, varchar, varchar, varchar, varchar, varchar, varchar, char, date, sexe, int, specialite, family_status, role) TO ANONYMOUS;
+GRANT EXECUTE ON FUNCTION app.create_patient(uuid, varchar, varchar, varchar, varchar, varchar, varchar, varchar, char, date, sexe,int, int, specialite, family_status, role) TO ANONYMOUS;
 
 -- assign medecin to patient
 
@@ -730,7 +734,7 @@ SELECT app.create_medecin('74dc5a42-79ca-48ac-97fc-2e682e0efec7', 'mesmoudi13', 
 SELECT app.create_medecin('98f451b8-8aa4-4dc3-90a4-e745288de8bb', 'mhammed-sed', '>{j${=@XWt*"T(j[Q1LD<oni)', 'mhammed-sed@esi-sba.dz', 'Sedaoui', 'Muhammed', 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260');
 SELECT app.create_medecin('cc04529e-8e39-456f-b1f7-80bc6c726e02', 'a.boussaid', 'sKG6PUENEUlIDYWtTnQKFkFYi', 'a.boussaidd@esi-sba.dz', 'Sedaoui', 'Muhammed', 'https://images.pexels.com/photos/2169500/pexels-photo-2169500.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260');
 
-SELECT app.create_patient('767f4741-4473-4d19-9e96-39b9abb01bc6', 'etudiant1', 'password', 'etudiant1@esi-sba.dz', 'Alimaia', 'Bouchiba', 'https://images.unsplash.com/photo-1560329072-17f59dcd30a4?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=767&q=80', '102 Rue Haddad Layachi, 19600', '0678569874', '2000-05-17', 'F', '3', 'SIW', 'Celibataire');
+SELECT app.create_patient('767f4741-4473-4d19-9e96-39b9abb01bc6', 'etudiant1', 'password', 'etudiant1@esi-sba.dz', 'Alimaia', 'Bouchiba', 'https://images.unsplash.com/photo-1560329072-17f59dcd30a4?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=767&q=80', '102 Rue Haddad Layachi, 19600', '0678569874', '2000-05-17', 'F',3,7, 'SIW', 'Celibataire');
 SELECT app.create_patient('84fa94cc-cd5d-449d-a4fa-197d0bf195b7', 'etudiant2', 'p{
 "Authorization": null
 }
@@ -738,3 +742,18 @@ assword', 'etudiant2@esi-sba.dz', 'Amrouche', 'Aleser', 'https://images.pexels.c
 
 SELECT app.assign_medecin_to_patient('767f4741-4473-4d19-9e96-39b9abb01bc6', 'cc04529e-8e39-456f-b1f7-80bc6c726e02');
 SELECT app.assign_medecin_to_patient('7150e9aa-b8be-4c5a-bc8d-653b0deaab96', '74dc5a42-79ca-48ac-97fc-2e682e0efec7');
+
+INSERT INTO app.ecole_niveau VALUES (1,  10 ,'Première Annèe');
+INSERT INTO app.ecole_niveau VALUES (2,  9 , 'Deuxième Annèe');
+INSERT INTO app.ecole_niveau VALUES (3,  8, 'Troisième Annèe');
+
+INSERT INTO app.ecole_niveau VALUES (4,  7, 'Quatrième Annèe');
+INSERT INTO app.ecole_niveau VALUES (5,  6, 'Sinqième Annèe');
+
+
+
+
+ 
+ 
+ 
+ 
